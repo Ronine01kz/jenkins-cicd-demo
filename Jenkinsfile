@@ -38,8 +38,7 @@ pipeline {
 
     // ---------- ОПЦИИ ПАЙПЛАЙНА ----------
     options {
-        // timestamps() и ansiColor('xterm') убраны — они требуют отдельных
-        // плагинов (Timestamper, AnsiColor). Если поставите эти плагины
+
         // в Manage Jenkins -> Plugins, можно будет вернуть обе строки.
         timeout(time: 20, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10'))
