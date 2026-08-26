@@ -28,14 +28,19 @@ pipeline {
     environment {
         APP_NAME     = 'jenkins-cicd-demo'
         APP_VERSION  = "1.0.${BUILD_NUMBER}"
-        DOCKER_IMAGE = "${APP_NAME}:${params.IMAGE_TAG}"
+        // Тег теперь ВСЕГДА включает номер сборки (BUILD_NUMBER),
+        // чтобы каждый билд гарантированно создавал новый, отличимый образ,
+        // даже если params.IMAGE_TAG не менялся между запусками.
+        DOCKER_IMAGE = "${APP_NAME}:${params.IMAGE_TAG}-${BUILD_NUMBER}"
         // Пример подтягивания секрета из Jenkins Credentials Store
         // DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
     }
 
     // ---------- ОПЦИИ ПАЙПЛАЙНА ----------
     options {
-        timestamps()
+        // timestamps() и ansiColor('xterm') убраны — они требуют отдельных
+        // плагинов (Timestamper, AnsiColor). Если поставите эти плагины
+        // в Manage Jenkins -> Plugins, можно будет вернуть обе строки.
         timeout(time: 20, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10'))
         disableConcurrentBuilds()
@@ -101,7 +106,14 @@ pipeline {
                 expression { return true } // сюда можно поставить любое условие
             }
             steps {
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                sh """
+                    docker build --build-arg APP_VERSION=${APP_VERSION} -t ${DOCKER_IMAGE} .
+                    echo '--- Проверка, что образ новый ---'
+                    echo "Тег образа:        ${DOCKER_IMAGE}"
+                    echo "APP_VERSION:       ${APP_VERSION}"
+                    echo "IMAGE ID:"
+                    docker images ${APP_NAME} --format '{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}'
+                """
             }
         }
 
