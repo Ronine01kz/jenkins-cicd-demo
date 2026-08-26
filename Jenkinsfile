@@ -43,8 +43,7 @@ pipeline {
         timeout(time: 20, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10'))
         disableConcurrentBuilds()
-        ansiColor('xterm')
-    }
+            }
 
     // ---------- АВТОЗАПУСК ----------
     triggers {
