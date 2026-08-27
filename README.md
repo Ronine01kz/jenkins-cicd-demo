@@ -1,5 +1,5 @@
 # jenkins-cicd-demo
-
+#dsfvgbuhnjimkommjuhvgyffctvygbhjmk,jnhbgvftdctfvgybhjmk,lp,kmojinhgytfrbhunjimo,k
 Тестовый репозиторий для проверки возможностей Jenkins CI/CD (Declarative Pipeline).
 
 ## Что внутри
