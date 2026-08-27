@@ -38,12 +38,14 @@ pipeline {
 
     // ---------- ОПЦИИ ПАЙПЛАЙНА ----------
     options {
-
+        // timestamps() и ansiColor('xterm') убраны — они требуют отдельных
+        // плагинов (Timestamper, AnsiColor). Если поставите эти плагины
         // в Manage Jenkins -> Plugins, можно будет вернуть обе строки.
         timeout(time: 20, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10'))
         disableConcurrentBuilds()
-            }
+        ansiColor('xterm')
+    }
 
     // ---------- АВТОЗАПУСК ----------
     triggers {
@@ -95,6 +97,36 @@ pipeline {
                             junit 'reports/junit.xml'
                         }
                     }
+                }
+            }
+        }
+
+        // ---------- MERGE dev -> main ПОСЛЕ ПОДТВЕРЖДЕНИЯ РАЗРАБОТЧИКОМ ----------
+        // Работает только когда собирается ветка dev (BRANCH_NAME задаётся
+        // автоматически в Multibranch Pipeline).
+        stage('Merge dev to main') {
+            when {
+                branch 'dev'
+            }
+            steps {
+                script {
+                    // Разработчик видел зелёные Lint/Unit tests выше.
+                    // Тут он явно подтверждает: "да, сливай в main".
+                    input message: "Все проверки на dev прошли успешно. Слить dev в main?", ok: 'Слить в main'
+                }
+                withCredentials([usernamePassword(credentialsId: 'github-push-creds',
+                                                   usernameVariable: 'GIT_USER',
+                                                   passwordVariable: 'GIT_TOKEN')]) {
+                    sh '''
+                        git config user.email "jenkins@ci.local"
+                        git config user.name "Jenkins CI"
+
+                        git fetch origin main:main
+                        git checkout main
+                        git merge origin/dev --no-edit
+
+                        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Ronine01kz/jenkins-cicd-demo.git main
+                    '''
                 }
             }
         }
@@ -172,7 +204,7 @@ pipeline {
             steps {
                 script {
                     echo "Деплой ${APP_NAME} версии ${APP_VERSION} в ${params.ENVIRONMENT}"
-                    sh "bash scripts/deploy.sh ${params.ENVIRONMENT}"
+                    sh "bash scripts/deploy.sh ${params.ENVIRONMENT} ${DOCKER_IMAGE} 5000"
                 }
             }
         }
@@ -183,7 +215,8 @@ pipeline {
         always {
             echo 'Пайплайн завершён (в любом случае).'
             archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
-            cleanWs()
+            // cleanWs() убран — требует плагина "Workspace Cleanup Plugin".
+            // Поставите плагин (Manage Jenkins -> Plugins) — можно будет вернуть.
         }
         success {
             echo "Сборка #${BUILD_NUMBER} прошла успешно."
