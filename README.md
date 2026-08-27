@@ -1,5 +1,7 @@
 # jenkins-cicd-demo
-#dsfvgbuhnjimkommjuhvgyffctvygbhjmk,jnhbgvftdctfvgybhjmk,lp,kmojinhgytfrbhunjimo,k
+#You say it's over
+#It's another day
+#Woah-woah-woah
 Тестовый репозиторий для проверки возможностей Jenkins CI/CD (Declarative Pipeline).
 
 ## Что внутри
